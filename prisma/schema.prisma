@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  uploads       Upload[]
+}
+
+model Upload {
+  id            String    @id @default(cuid())
+  filename      String
+  originalName  String
+  fileType      String
+  status        UploadStatus @default(PENDING)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Transaction {
+  id              String    @id @default(cuid())
+  uploadId        String
+  upload          Upload    @relation(fields: [uploadId], references: [id])
+  date            DateTime
+  description     String
+  amount          Float
+  balance         Float?
+  category        String?
+  confidence      Float?
+  status          TransactionStatus @default(PENDING)
+  xeroId          String?
+  xeroStatus      String?
+  needsClarification Boolean @default(false)
+  telegramMessageId Int?
+  userResponse    String?
+  rawData         Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model XeroToken {
+  id              String    @id @default(cuid())
+  accessToken     String    @db.Text
+  refreshToken    String    @db.Text
+  expiresAt       DateTime
+  tenantId        String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model TelegramChat {
+  id              String    @id @default(cuid())
+  chatId          String    @unique
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum UploadStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum TransactionStatus {
+  PENDING
+  CATEGORIZED
+  NEEDS_CLARIFICATION
+  CLARIFIED
+  POSTED_TO_XERO
+  FAILED
+}
