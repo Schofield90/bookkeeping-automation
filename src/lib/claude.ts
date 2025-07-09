@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { sendTelegramMessage } from '@/lib/telegram';
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
+  apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder',
 });
 
 const TRANSACTION_CATEGORIES = [

@@ -2,10 +2,10 @@ import { XeroClient } from 'xero-node';
 import { prisma } from '@/lib/db';
 
 const xero = new XeroClient({
-  clientId: process.env.XERO_CLIENT_ID!,
-  clientSecret: process.env.XERO_CLIENT_SECRET!,
-  redirectUris: [process.env.XERO_REDIRECT_URI!],
-  scopes: process.env.XERO_SCOPES!.split(' ')
+  clientId: process.env.XERO_CLIENT_ID || 'placeholder',
+  clientSecret: process.env.XERO_CLIENT_SECRET || 'placeholder',
+  redirectUris: [process.env.XERO_REDIRECT_URI || 'http://localhost:3000/api/xero/callback'],
+  scopes: (process.env.XERO_SCOPES || 'accounting.transactions').split(' ')
 });
 
 export function getAuthorizationUrl() {
@@ -79,7 +79,7 @@ export async function getXeroClient() {
       refresh_token: token.refreshToken,
       expires_in: Math.floor((token.expiresAt.getTime() - now.getTime()) / 1000),
       token_type: 'Bearer',
-      scope: process.env.XERO_SCOPES!
+      scope: process.env.XERO_SCOPES || 'accounting.transactions'
     });
   }
   

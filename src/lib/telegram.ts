@@ -1,13 +1,13 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { prisma } from '@/lib/db';
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN!, {
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN || 'placeholder', {
   polling: process.env.NODE_ENV === 'development'
 });
 
 export async function sendTelegramMessage(message: string): Promise<number> {
   try {
-    const chatId = process.env.TELEGRAM_CHAT_ID!;
+    const chatId = process.env.TELEGRAM_CHAT_ID || 'placeholder';
     const response = await bot.sendMessage(chatId, message);
     return response.message_id;
   } catch (error) {
@@ -80,7 +80,7 @@ async function handleClarificationResponse(transaction: any, response: string) {
     
     // Send confirmation message
     await bot.sendMessage(
-      process.env.TELEGRAM_CHAT_ID!,
+      process.env.TELEGRAM_CHAT_ID || 'placeholder',
       `✅ Transaction categorized as "${category}". It will be posted to Xero shortly.`
     );
     
@@ -90,7 +90,7 @@ async function handleClarificationResponse(transaction: any, response: string) {
   } catch (error) {
     console.error('Error handling clarification response:', error);
     await bot.sendMessage(
-      process.env.TELEGRAM_CHAT_ID!,
+      process.env.TELEGRAM_CHAT_ID || 'placeholder',
       `❌ Error processing your response. Please try again.`
     );
   }
@@ -110,13 +110,13 @@ async function postToXero(transactionId: string) {
     await createBankTransaction(transaction);
     
     await bot.sendMessage(
-      process.env.TELEGRAM_CHAT_ID!,
+      process.env.TELEGRAM_CHAT_ID || 'placeholder',
       `💰 Transaction posted to Xero successfully!`
     );
   } catch (error) {
     console.error('Error posting to Xero:', error);
     await bot.sendMessage(
-      process.env.TELEGRAM_CHAT_ID!,
+      process.env.TELEGRAM_CHAT_ID || 'placeholder',
       `❌ Error posting to Xero: ${error.message}`
     );
   }
