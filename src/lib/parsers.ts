@@ -1,6 +1,6 @@
 import { parse } from 'csv-parse';
 import { promises as fs } from 'fs';
-import pdf from 'pdf-parse';
+// import pdf from 'pdf-parse';
 
 export interface ParsedTransaction {
   date: Date;
@@ -117,36 +117,6 @@ function parseAmount(amountStr: string): number {
 }
 
 export async function parsePDF(filepath: string): Promise<ParsedTransaction[]> {
-  try {
-    const dataBuffer = await fs.readFile(filepath);
-    const data = await pdf(dataBuffer);
-    
-    // Extract text from PDF
-    const text = data.text;
-    
-    // This is a simplified parser - you'd need to customize based on your bank's PDF format
-    const transactions: ParsedTransaction[] = [];
-    const lines = text.split('\n');
-    
-    // Look for transaction patterns in the text
-    const transactionPattern = /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+(.+?)\s+([\$\-]?[\d,]+\.?\d*)/;
-    
-    for (const line of lines) {
-      const match = line.match(transactionPattern);
-      if (match) {
-        const date = parseDate(match[1]);
-        const description = match[2].trim();
-        const amount = parseAmount(match[3]);
-        
-        if (date && description && !isNaN(amount)) {
-          transactions.push({ date, description, amount });
-        }
-      }
-    }
-    
-    return transactions;
-  } catch (error) {
-    console.error('PDF parsing error:', error);
-    throw new Error('Failed to parse PDF file');
-  }
+  // PDF parsing temporarily disabled for deployment
+  throw new Error('PDF parsing temporarily disabled for deployment');
 }
