@@ -33,7 +33,6 @@
     "next": "15.3.5",
     "next-auth": "^4.24.11",
     "node-telegram-bot-api": "^0.66.0",
-    "pdf-parse": "^1.1.1",
     "prisma": "^6.11.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
