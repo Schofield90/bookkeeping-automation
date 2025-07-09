@@ -5,9 +5,6 @@
     }
   },
   "functions": {
-    "src/app/api/upload/route.ts": {
-      "maxDuration": 60
-    },
     "src/app/api/webhooks/telegram/route.ts": {
       "maxDuration": 30
     }
