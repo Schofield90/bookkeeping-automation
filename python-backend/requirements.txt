@@ -1,0 +1,54 @@
+# FastAPI and ASGI server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.9
+
+# Supabase client
+supabase==2.3.4
+
+# OpenAI for embeddings and LLM
+openai==1.10.0
+
+# Xero API integration
+xero-python==5.1.0
+
+# OCR and PDF processing
+PyPDF2==3.0.1
+pdf2image==1.17.0
+pytesseract==0.3.10
+pdfplumber==0.11.0
+
+# Data processing
+pandas==2.1.4
+numpy==1.26.3
+
+# Environment variables
+python-dotenv==1.0.0
+
+# HTTP requests
+httpx==0.26.0
+
+# Pydantic for data validation
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# PostgreSQL adapter (for direct pgvector queries if needed)
+psycopg2-binary==2.9.9
+
+# Date/time utilities
+python-dateutil==2.8.2
+
+# Async task queue (for background processing)
+celery==5.3.6
+redis==5.0.1
+
+# Logging
+python-json-logger==2.0.7
+
+# Encryption
+cryptography==41.0.7
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
