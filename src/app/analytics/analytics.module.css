@@ -228,17 +228,17 @@
   overflow-x: auto;
 }
 
-table {
+.table table {
   width: 100%;
   border-collapse: collapse;
 }
 
-thead {
+.table thead {
   background: #f9fafb;
   border-bottom: 2px solid #e5e7eb;
 }
 
-th {
+.table th {
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
@@ -246,13 +246,13 @@ th {
   font-size: 0.9rem;
 }
 
-td {
+.table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #f3f4f6;
   color: #1f2937;
 }
 
-tbody tr:hover {
+.table tbody tr:hover {
   background: #f9fafb;
 }
 

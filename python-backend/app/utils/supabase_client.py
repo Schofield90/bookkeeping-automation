@@ -33,7 +33,7 @@ class SupabaseClient:
     async def get_statement(self, statement_id: UUID, org_id: UUID) -> Optional[Dict[str, Any]]:
         """Get a bank statement by ID"""
         try:
-            response = self.client.table('bank_statements').select('*').eq(
+            response = self.client.table('bookkeeping_bank_statements').select('*').eq(
                 'id', str(statement_id)
             ).eq('organization_id', str(org_id)).single().execute()
             return response.data
@@ -44,7 +44,7 @@ class SupabaseClient:
     async def update_statement(self, statement_id: UUID, data: Dict[str, Any]) -> bool:
         """Update a bank statement"""
         try:
-            self.client.table('bank_statements').update(data).eq(
+            self.client.table('bookkeeping_bank_statements').update(data).eq(
                 'id', str(statement_id)
             ).execute()
             return True
@@ -59,7 +59,7 @@ class SupabaseClient:
     async def insert_transactions(self, transactions: List[Dict[str, Any]]) -> bool:
         """Bulk insert transactions"""
         try:
-            self.client.table('transactions').insert(transactions).execute()
+            self.client.table('bookkeeping_transactions').insert(transactions).execute()
             return True
         except Exception as e:
             logger.error(f"Error inserting transactions: {e}")
@@ -70,7 +70,7 @@ class SupabaseClient:
     ) -> List[Dict[str, Any]]:
         """Get all transactions for a statement"""
         try:
-            response = self.client.table('transactions').select('*').eq(
+            response = self.client.table('bookkeeping_transactions').select('*').eq(
                 'statement_id', str(statement_id)
             ).eq('organization_id', str(org_id)).execute()
             return response.data
@@ -81,7 +81,7 @@ class SupabaseClient:
     async def update_transaction(self, transaction_id: UUID, data: Dict[str, Any]) -> bool:
         """Update a transaction"""
         try:
-            self.client.table('transactions').update(data).eq(
+            self.client.table('bookkeeping_transactions').update(data).eq(
                 'id', str(transaction_id)
             ).execute()
             return True
@@ -92,7 +92,7 @@ class SupabaseClient:
     async def get_transaction(self, transaction_id: UUID, org_id: UUID) -> Optional[Dict[str, Any]]:
         """Get a single transaction"""
         try:
-            response = self.client.table('transactions').select('*').eq(
+            response = self.client.table('bookkeeping_transactions').select('*').eq(
                 'id', str(transaction_id)
             ).eq('organization_id', str(org_id)).single().execute()
             return response.data
@@ -113,12 +113,12 @@ class SupabaseClient:
     ) -> List[Dict[str, Any]]:
         """
         Find similar patterns using pgvector similarity search
-        Uses the find_similar_patterns function created in the migration
+        Uses the bookkeeping_find_similar_patterns function created in the migration
         """
         try:
             # Call the PostgreSQL function directly
             response = self.client.rpc(
-                'find_similar_patterns',
+                'bookkeeping_find_similar_patterns',
                 {
                     'query_embedding': query_embedding,
                     'org_id': str(org_id),
@@ -134,7 +134,7 @@ class SupabaseClient:
     async def insert_learned_pattern(self, pattern: Dict[str, Any]) -> bool:
         """Insert a new learned pattern"""
         try:
-            self.client.table('learned_patterns').insert(pattern).execute()
+            self.client.table('bookkeeping_learned_patterns').insert(pattern).execute()
             return True
         except Exception as e:
             logger.error(f"Error inserting learned pattern: {e}")
@@ -155,7 +155,7 @@ class SupabaseClient:
         """
         try:
             # First check if a very similar pattern exists (exact match on normalized text)
-            existing = self.client.table('learned_patterns').select('*').eq(
+            existing = self.client.table('bookkeeping_learned_patterns').select('*').eq(
                 'organization_id', str(org_id)
             ).eq('normalized_text', normalized_text).eq(
                 'suggested_account_code', account_code
@@ -164,7 +164,7 @@ class SupabaseClient:
             if existing.data and len(existing.data) > 0:
                 # Update existing pattern
                 pattern_id = existing.data[0]['id']
-                self.client.table('learned_patterns').update({
+                self.client.table('bookkeeping_learned_patterns').update({
                     'times_used': existing.data[0]['times_used'] + 1,
                     'times_verified': existing.data[0].get('times_verified', 0) + 1,
                     'last_verified_at': 'now()',
@@ -198,7 +198,7 @@ class SupabaseClient:
     async def get_xero_config(self, org_id: UUID) -> Optional[Dict[str, Any]]:
         """Get Xero configuration for an organization"""
         try:
-            response = self.client.table('xero_configs').select('*').eq(
+            response = self.client.table('bookkeeping_xero_configs').select('*').eq(
                 'organization_id', str(org_id)
             ).single().execute()
             return response.data
@@ -209,7 +209,7 @@ class SupabaseClient:
     async def update_xero_config(self, org_id: UUID, data: Dict[str, Any]) -> bool:
         """Update Xero configuration"""
         try:
-            self.client.table('xero_configs').update(data).eq(
+            self.client.table('bookkeeping_xero_configs').update(data).eq(
                 'organization_id', str(org_id)
             ).execute()
             return True
@@ -224,7 +224,7 @@ class SupabaseClient:
     async def download_file(self, file_path: str) -> Optional[bytes]:
         """Download a file from Supabase storage"""
         try:
-            response = self.client.storage.from_('financial-docs').download(file_path)
+            response = self.client.storage.from_('bookkeeping-financial-docs').download(file_path)
             return response
         except Exception as e:
             logger.error(f"Error downloading file {file_path}: {e}")

@@ -32,7 +32,7 @@ export async function uploadBankStatement(
 
   try {
     const { data, error } = await supabase.storage
-      .from('financial-docs')
+      .from('bookkeeping-financial-docs')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -53,7 +53,7 @@ export async function uploadBankStatement(
  */
 export async function getSignedUrl(filePath: string): Promise<string | null> {
   const { data, error } = await supabase.storage
-    .from('financial-docs')
+    .from('bookkeeping-financial-docs')
     .createSignedUrl(filePath, 3600) // 1 hour expiry
 
   if (error) {

@@ -160,9 +160,9 @@ class MonitoringService:
             logger.error(f"Error logging LLM categorization: {e}")
 
     async def _insert_log(self, log_data: Dict[str, Any]):
-        """Insert a log entry into ai_performance_logs table"""
+        """Insert a log entry into bookkeeping_ai_performance_logs table"""
         try:
-            self.supabase.get_client().table('ai_performance_logs').insert(log_data).execute()
+            self.supabase.get_client().table('bookkeeping_ai_performance_logs').insert(log_data).execute()
         except Exception as e:
             logger.error(f"Error inserting performance log: {e}")
             # Don't raise - monitoring should not break the main flow
@@ -190,7 +190,7 @@ class MonitoringService:
                         NULLIF(COUNT(*) FILTER (WHERE event_type IN ('user_correction', 'user_confirmation')), 0) * 100,
                         2
                     ) AS correction_rate
-                FROM ai_performance_logs
+                FROM bookkeeping_ai_performance_logs
                 WHERE organization_id = '{organization_id}'
                   AND created_at >= NOW() - INTERVAL '{days} days'
             """
@@ -235,7 +235,7 @@ class MonitoringService:
         """
 
         try:
-            response = self.supabase.get_client().table('ai_performance_logs').select(
+            response = self.supabase.get_client().table('bookkeeping_ai_performance_logs').select(
                 'ai_suggested_account_code, user_approved_account_code, ai_confidence_score, transaction_description'
             ).eq('organization_id', str(organization_id)).eq(
                 'event_type', 'user_correction'
@@ -269,7 +269,7 @@ class MonitoringService:
                         NULLIF(COUNT(*), 0) * 100,
                         2
                     ) AS vector_match_percentage
-                FROM ai_performance_logs
+                FROM bookkeeping_ai_performance_logs
                 WHERE organization_id = '{organization_id}'
                   AND event_type = 'initial_categorization'
                   AND created_at >= NOW() - INTERVAL '6 months'

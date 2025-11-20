@@ -142,7 +142,7 @@ class XeroAuthService:
                 await self.supabase.update_xero_config(organization_id, xero_config_data)
             else:
                 # Insert new
-                self.supabase.get_client().table('xero_configs').insert(xero_config_data).execute()
+                self.supabase.get_client().table('bookkeeping_xero_configs').insert(xero_config_data).execute()
 
             # Fetch and cache Chart of Accounts
             await self._fetch_and_cache_chart_of_accounts(
