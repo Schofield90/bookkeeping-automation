@@ -17,7 +17,7 @@ export const xero = new XeroClient({
     clientId: client_id,
     clientSecret: client_secret,
     redirectUris: [redirectUrl],
-    scopes: scopes.join(' '),
+    scopes: scopes,
 });
 
 export const getXeroUrl = async () => {
