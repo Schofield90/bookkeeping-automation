@@ -20,7 +20,7 @@ export const parseCSV = (file: File): Promise<Transaction[]> => {
                         date: row['Date'] || row['date'],
                         description: row['Description'] || row['description'] || row['Memo'],
                         amount: Math.abs(amount),
-                        type: amount < 0 ? 'debit' : 'credit'
+                        type: (amount < 0 ? 'debit' : 'credit') as 'debit' | 'credit'
                     };
                 }).filter(t => t.date && t.amount); // Filter invalid rows
                 resolve(transactions);
