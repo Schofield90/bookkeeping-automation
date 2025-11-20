@@ -78,6 +78,20 @@ interface XeroSyncResponse {
   message: string
 }
 
+interface ChartOfAccount {
+  code: string
+  name: string
+  type?: string
+  description?: string
+  tax_type?: string
+  status?: string
+}
+
+interface ChartOfAccountsResponse {
+  accounts: ChartOfAccount[]
+  count: number
+}
+
 /**
  * Process a bank statement (Golden Equation check)
  */
@@ -200,6 +214,24 @@ export async function syncToXero(
   if (!response.ok) {
     const error = await response.json()
     throw new Error(error.detail || 'Failed to sync to Xero')
+  }
+
+  return response.json()
+}
+
+/**
+ * Get Chart of Accounts from Xero
+ */
+export async function getChartOfAccounts(
+  organizationId: string
+): Promise<ChartOfAccountsResponse> {
+  const response = await fetch(
+    `${API_URL}/api/xero/chart-of-accounts?organization_id=${organizationId}`
+  )
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.detail || 'Failed to get Chart of Accounts')
   }
 
   return response.json()

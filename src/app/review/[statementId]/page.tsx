@@ -10,15 +10,24 @@
  * 2. User approves or corrects categorization
  * 3. On correction: Generate embedding → Store in learned_patterns
  * 4. Next similar transaction → Vector search finds it!
+ *
+ * UX Improvements:
+ * - Collapsible sections: "Needs Review" vs "Ready to Auto-Approve"
+ * - Bulk approval for high-confidence transactions
+ * - Searchable Chart of Accounts dropdown
  */
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { getReviewFeed, updateTransaction, syncToXero } from '@/lib/api'
+import { AccountSelector } from '@/components/AccountSelector'
 import styles from './review.module.css'
 
 // Mock organization ID
 const MOCK_ORG_ID = '550e8400-e29b-41d4-a716-446655440000'
+
+// Confidence threshold for auto-approve
+const AUTO_APPROVE_THRESHOLD = 0.9
 
 interface Transaction {
   id: string
@@ -46,6 +55,15 @@ export default function ReviewPage() {
   const [verifiedCount, setVerifiedCount] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [syncing, setSyncing] = useState(false)
+  const [bulkApproving, setBulkApproving] = useState(false)
+
+  // Collapsible section states
+  const [needsReviewExpanded, setNeedsReviewExpanded] = useState(true)
+  const [autoApproveExpanded, setAutoApproveExpanded] = useState(true)
+
+  // Split transactions by confidence
+  const needsReview = transactions.filter(t => t.ai_confidence_score < AUTO_APPROVE_THRESHOLD)
+  const autoApprove = transactions.filter(t => t.ai_confidence_score >= AUTO_APPROVE_THRESHOLD)
 
   useEffect(() => {
     loadTransactions()
@@ -100,6 +118,47 @@ export default function ReviewPage() {
 
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to update transaction', 'error')
+    }
+  }
+
+  const handleBulkApprove = async () => {
+    if (autoApprove.length === 0) {
+      return
+    }
+
+    if (!confirm(`Approve all ${autoApprove.length} high-confidence transactions?`)) {
+      return
+    }
+
+    try {
+      setBulkApproving(true)
+      let successCount = 0
+
+      // Approve each transaction
+      for (const transaction of autoApprove) {
+        try {
+          await updateTransaction({
+            transaction_id: transaction.id,
+            organization_id: MOCK_ORG_ID,
+            approved_account_code: transaction.assigned_account_code!,
+            approved_account_name: transaction.assigned_account_name!
+          })
+          successCount++
+        } catch (err) {
+          console.error(`Failed to approve transaction ${transaction.id}:`, err)
+        }
+      }
+
+      // Remove approved transactions
+      setTransactions(prev => prev.filter(t => t.ai_confidence_score < AUTO_APPROVE_THRESHOLD))
+      setVerifiedCount(prev => prev + successCount)
+
+      showToast(`✅ Bulk approved ${successCount} transactions!`, 'success')
+
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Bulk approval failed', 'error')
+    } finally {
+      setBulkApproving(false)
     }
   }
 
@@ -187,16 +246,83 @@ export default function ReviewPage() {
           </div>
         </div>
 
-        {/* Transaction List */}
+        {/* Transaction List with Collapsible Sections */}
         {transactions.length > 0 ? (
           <div className={styles.transactionList}>
-            {transactions.map((transaction) => (
-              <TransactionCard
-                key={transaction.id}
-                transaction={transaction}
-                onApprove={handleApprove}
-              />
-            ))}
+            {/* Needs Review Section */}
+            {needsReview.length > 0 && (
+              <div className={styles.section}>
+                <button
+                  className={styles.sectionHeader}
+                  onClick={() => setNeedsReviewExpanded(!needsReviewExpanded)}
+                >
+                  <span className={styles.sectionTitle}>
+                    ⚠️ Needs Review ({needsReview.length})
+                  </span>
+                  <span className={styles.sectionSubtitle}>
+                    Low confidence - Please verify these categorizations
+                  </span>
+                  <span className={styles.chevron}>
+                    {needsReviewExpanded ? '▼' : '▶'}
+                  </span>
+                </button>
+                {needsReviewExpanded && (
+                  <div className={styles.sectionContent}>
+                    {needsReview.map((transaction) => (
+                      <TransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onApprove={handleApprove}
+                        organizationId={MOCK_ORG_ID}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Auto-Approve Section */}
+            {autoApprove.length > 0 && (
+              <div className={styles.section}>
+                <button
+                  className={styles.sectionHeader}
+                  onClick={() => setAutoApproveExpanded(!autoApproveExpanded)}
+                >
+                  <span className={styles.sectionTitle}>
+                    ✓ Ready to Auto-Approve ({autoApprove.length})
+                  </span>
+                  <span className={styles.sectionSubtitle}>
+                    High confidence - AI is confident about these categorizations
+                  </span>
+                  <span className={styles.chevron}>
+                    {autoApproveExpanded ? '▼' : '▶'}
+                  </span>
+                </button>
+                {autoApproveExpanded && (
+                  <>
+                    <div className={styles.bulkActionBar}>
+                      <button
+                        className={styles.bulkApproveButton}
+                        onClick={handleBulkApprove}
+                        disabled={bulkApproving}
+                      >
+                        {bulkApproving ? '⟳ Approving...' : `✓ Approve All ${autoApprove.length}`}
+                      </button>
+                    </div>
+                    <div className={styles.sectionContent}>
+                      {autoApprove.map((transaction) => (
+                        <TransactionCard
+                          key={transaction.id}
+                          transaction={transaction}
+                          onApprove={handleApprove}
+                          organizationId={MOCK_ORG_ID}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className={styles.emptyState}>
@@ -228,14 +354,19 @@ export default function ReviewPage() {
 
 function TransactionCard({
   transaction,
-  onApprove
+  onApprove,
+  organizationId
 }: {
   transaction: Transaction
   onApprove: (txn: Transaction, customCode?: string, customName?: string) => void
+  organizationId: string
 }) {
   const [showCustomInput, setShowCustomInput] = useState(false)
-  const [customCode, setCustomCode] = useState('')
-  const [customName, setCustomName] = useState('')
+  const [selectedAccount, setSelectedAccount] = useState<{ code: string; name: string } | undefined>(
+    transaction.assigned_account_code && transaction.assigned_account_name
+      ? { code: transaction.assigned_account_code, name: transaction.assigned_account_name }
+      : undefined
+  )
 
   // Confidence color coding
   const getConfidenceColor = (score: number) => {
@@ -292,19 +423,11 @@ function TransactionCard({
       {/* Custom Input (if user wants to change) */}
       {showCustomInput && (
         <div className={styles.customInput}>
-          <input
-            type="text"
-            placeholder="Account Code (e.g., 420)"
-            value={customCode}
-            onChange={(e) => setCustomCode(e.target.value)}
-            className={styles.input}
-          />
-          <input
-            type="text"
-            placeholder="Account Name (e.g., Entertainment)"
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-            className={styles.input}
+          <AccountSelector
+            organizationId={organizationId}
+            value={selectedAccount}
+            onChange={setSelectedAccount}
+            placeholder="Search Chart of Accounts..."
           />
         </div>
       )}
@@ -331,10 +454,12 @@ function TransactionCard({
             <button
               className={styles.approveButton}
               onClick={() => {
-                onApprove(transaction, customCode, customName)
-                setShowCustomInput(false)
+                if (selectedAccount) {
+                  onApprove(transaction, selectedAccount.code, selectedAccount.name)
+                  setShowCustomInput(false)
+                }
               }}
-              disabled={!customCode || !customName}
+              disabled={!selectedAccount}
             >
               ✓ Save & Teach AI
             </button>

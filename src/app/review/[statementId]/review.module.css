@@ -339,3 +339,96 @@
   background: #ef4444;
   color: white;
 }
+
+/* Collapsible Section Styles */
+.section {
+  margin-bottom: 2rem;
+}
+
+.sectionHeader {
+  width: 100%;
+  background: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: left;
+}
+
+.sectionHeader:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.sectionTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  display: block;
+  width: 100%;
+}
+
+.sectionSubtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 400;
+  display: block;
+  width: 100%;
+}
+
+.chevron {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-size: 1.2rem;
+  color: #9ca3af;
+  transition: transform 0.3s ease;
+}
+
+.sectionContent {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Bulk Action Bar */
+.bulkActionBar {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: center;
+}
+
+.bulkApproveButton {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bulkApproveButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.bulkApproveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
