@@ -1,0 +1,72 @@
+.main {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.uploadCard {
+    min-height: 400px;
+}
+
+.stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.statCard {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.statValue {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.statLabel {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.reviewBtn {
+    width: 100%;
+}
+
+.statusConnected {
+    color: var(--success);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.lastSync {
+    color: var(--text-dim);
+    font-size: 0.875rem;
+}
