@@ -27,10 +27,36 @@ const MOCK_TRANSACTIONS = [
     }
 ];
 
-export default function ReviewPage() {
-    const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
+interface Transaction {
+    id: number;
+    date: string;
+    description: string;
+    amount: number;
+    question?: string;
+    aiSuggestion: string;
+    confidence: number;
+}
 
-    const handleApprove = (id: number) => {
+export default function ReviewPage() {
+    const [transactions, setTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
+    const [applyingRule, setApplyingRule] = useState<number | null>(null);
+
+    const handleApprove = async (id: number, category: string, createRule: boolean, description: string) => {
+        if (createRule) {
+            try {
+                await fetch('/api/rules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pattern: description, category })
+                });
+                // Optimistically update other transactions with same description
+                setTransactions(prev => prev.map(t =>
+                    t.description === description ? { ...t, aiSuggestion: category, confidence: 1.0, question: undefined as string | undefined } : t
+                ));
+            } catch (error) {
+                console.error('Failed to create rule:', error);
+            }
+        }
         setTransactions(prev => prev.filter(t => t.id !== id));
     };
 
@@ -43,29 +69,11 @@ export default function ReviewPage() {
 
             <div className={styles.list}>
                 {transactions.map(t => (
-                    <Card key={t.id} className={styles.item}>
-                        <div className={styles.itemHeader}>
-                            <div className={styles.date}>{t.date}</div>
-                            <div className={styles.amount}>${t.amount.toFixed(2)}</div>
-                        </div>
-                        <div className={styles.description}>{t.description}</div>
-
-                        <div className={styles.aiSection}>
-                            <div className={styles.aiIcon}>🤖</div>
-                            <div className={styles.question}>{t.question}</div>
-                        </div>
-
-                        <div className={styles.actions}>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => handleApprove(t.id)}
-                            >
-                                {t.aiSuggestion} (Approve)
-                            </Button>
-                            <Button size="sm" variant="ghost">Other...</Button>
-                        </div>
-                    </Card>
+                    <TransactionCard
+                        key={t.id}
+                        transaction={t}
+                        onApprove={handleApprove}
+                    />
                 ))}
 
                 {transactions.length === 0 && (
@@ -78,3 +86,42 @@ export default function ReviewPage() {
         </main>
     );
 }
+
+const TransactionCard = ({ transaction, onApprove }: { transaction: any, onApprove: any }) => {
+    const [createRule, setCreateRule] = useState(false);
+
+    return (
+        <Card className={styles.item}>
+            <div className={styles.itemHeader}>
+                <div className={styles.date}>{transaction.date}</div>
+                <div className={styles.amount}>${transaction.amount.toFixed(2)}</div>
+            </div>
+            <div className={styles.description}>{transaction.description}</div>
+
+            <div className={styles.aiSection}>
+                <div className={styles.aiIcon}>🤖</div>
+                <div className={styles.question}>{transaction.question || 'Please confirm category'}</div>
+            </div>
+
+            <div className={styles.actions}>
+                <div className={styles.ruleOption}>
+                    <input
+                        type="checkbox"
+                        id={`rule-${transaction.id}`}
+                        checked={createRule}
+                        onChange={(e) => setCreateRule(e.target.checked)}
+                    />
+                    <label htmlFor={`rule-${transaction.id}`}>Always apply for "{transaction.description}"</label>
+                </div>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onApprove(transaction.id, transaction.aiSuggestion, createRule, transaction.description)}
+                >
+                    {transaction.aiSuggestion} (Approve)
+                </Button>
+                <Button size="sm" variant="ghost">Other...</Button>
+            </div>
+        </Card>
+    );
+};

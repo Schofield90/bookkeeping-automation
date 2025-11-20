@@ -14,7 +14,35 @@ export interface AnalyzedTransaction {
     reasoning?: string;
 }
 
+import { loadRules, findMatchingRule } from './rules';
+
 export const analyzeTransactions = async (transactions: any[]): Promise<AnalyzedTransaction[]> => {
+    // Load existing rules
+    const rules = loadRules();
+    const analyzedTransactions: AnalyzedTransaction[] = [];
+    const transactionsForAi: any[] = [];
+
+    // First pass: Apply rules
+    for (const t of transactions) {
+        const rule = findMatchingRule(t.description, rules);
+        if (rule) {
+            analyzedTransactions.push({
+                original: t,
+                category: rule.category,
+                confidence: 1.0,
+                needsReview: false,
+                reasoning: `Matched rule: "${rule.pattern}"`
+            });
+        } else {
+            transactionsForAi.push(t);
+        }
+    }
+
+    // If all matched rules, return early
+    if (transactionsForAi.length === 0) {
+        return analyzedTransactions;
+    }
+
     // In a real app, we would batch these or send a summary if too many
     const prompt = `
     You are an expert bookkeeper. Analyze the following bank transactions and categorize them into standard Xero account codes (e.g., 'Office Expenses', 'Travel', 'Sales', 'Bank Fees').
@@ -25,7 +53,7 @@ export const analyzeTransactions = async (transactions: any[]): Promise<Analyzed
     3. If confidence is below 0.8, set needsReview to true and formulate a specific question to ask the user to clarify.
     
     Transactions:
-    ${JSON.stringify(transactions)} // Full batch from client
+    ${JSON.stringify(transactionsForAi)} // Full batch from client
     
     Return JSON format:
     [
@@ -51,11 +79,14 @@ export const analyzeTransactions = async (transactions: any[]): Promise<Analyzed
         if (!content) throw new Error("No content from AI");
 
         const result = JSON.parse(content);
-        return result.transactions || result; // Handle potential wrapper
+        const aiAnalyzed = result.transactions || result; // Handle potential wrapper
+
+        // Merge results
+        return [...analyzedTransactions, ...aiAnalyzed];
     } catch (error) {
         console.error("AI Analysis failed:", error);
         // Fallback mock response for demo if no API key
-        return transactions.map(t => ({
+        const fallback = transactionsForAi.map(t => ({
             original: t,
             category: "Uncategorized",
             confidence: 0,
@@ -63,5 +94,6 @@ export const analyzeTransactions = async (transactions: any[]): Promise<Analyzed
             question: "What is this transaction for?",
             reasoning: "AI service unavailable"
         }));
+        return [...analyzedTransactions, ...fallback];
     }
 };

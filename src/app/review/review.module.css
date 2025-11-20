@@ -65,8 +65,24 @@
 
 .actions {
     display: flex;
+    flex-direction: column;
     gap: 1rem;
+    align-items: flex-end;
 }
+
+.ruleOption {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.ruleOption input {
+    accent-color: var(--primary);
+}
+
+
 
 .emptyState {
     text-align: center;
